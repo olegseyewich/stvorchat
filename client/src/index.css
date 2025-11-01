@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: 179 146 240;
+  --color-secondary: 199 168 255;
+  --color-surface: 237 231 246;
+  --color-panel: 225 216 241;
+  --color-border: 208 194 229;
+  --color-text: 60 42 93;
+  --color-hover: 216 201 240;
+  --color-muted: 187 174 220;
+  --color-success: 167 243 208;
+  --color-error: 252 165 165;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root.theme-dark,
+:root[data-theme="dark"] {
+  --color-primary: 156 137 243;
+  --color-secondary: 183 157 255;
+  --color-surface: 31 26 46;
+  --color-panel: 42 32 63;
+  --color-border: 66 53 95;
+  --color-text: 239 233 255;
+  --color-hover: 59 45 92;
+  --color-muted: 148 137 192;
+  --color-success: 52 211 153;
+  --color-error: 248 113 113;
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-surface text-text font-sans min-h-screen;
+}
+
+#root {
+  @apply min-h-screen;
+}

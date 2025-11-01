@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ChannelType {
+  TEXT
+  DIRECT
+}
+
+model User {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  passwordHash   String
+  displayName    String
+  statusMessage  String?           @map("status_message")
+  avatarUrl      String?           @map("avatar_url")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  rooms          Room[]            @relation("RoomOwner")
+  memberships    RoomMembership[]
+  channelMembers ChannelMember[]
+  messages       Message[]
+
+  friendRequestsSent     FriendRequest[] @relation("SentRequests")
+  friendRequestsReceived FriendRequest[] @relation("ReceivedRequests")
+
+  friendshipsA Friendship[] @relation("UserFriendships")
+  friendshipsB Friendship[] @relation("FriendUserFriendships")
+}
+
+model FriendRequest {
+  id         String               @id @default(cuid())
+  senderId   String               @map("sender_id")
+  receiverId String               @map("receiver_id")
+  status     FriendRequestStatus  @default(PENDING)
+  createdAt  DateTime             @default(now()) @map("created_at")
+  respondedAt DateTime?           @map("responded_at")
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userAId   String   @map("user_a_id")
+  userBId   String   @map("user_b_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userA User @relation("UserFriendships", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendUserFriendships", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+}
+
+model Room {
+  id          String            @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String            @map("owner_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  owner       User              @relation("RoomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships RoomMembership[]
+  channels    Channel[]
+}
+
+model RoomMembership {
+  id        String     @id @default(cuid())
+  userId    String     @map("user_id")
+  roomId    String     @map("room_id")
+  role      MemberRole @default(MEMBER)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+  @@index([roomId])
+}
+
+model Channel {
+  id        String       @id @default(cuid())
+  roomId    String?      @map("room_id")
+  name      String
+  type      ChannelType  @default(TEXT)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  room        Room?           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  members     ChannelMember[]
+  messages    Message[]
+
+  @@index([roomId])
+}
+
+model ChannelMember {
+  id        String   @id @default(cuid())
+  channelId String   @map("channel_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  channelId String   @map("channel_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channelId])
+  @@index([userId])
+}

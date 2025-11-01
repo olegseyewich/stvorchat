@@ -1,0 +1,48 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "description": "Electron оболочка для Stvor messenger",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:client\" \"npm:dev:electron\"",
+    "dev:client": "npm --prefix ../client run dev",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "start": "cross-env NODE_ENV=production electron .",
+    "build": "npm --prefix ../client run build && electron-builder --win --x64",
+    "package": "electron-builder --dir"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^29.4.0",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^9.0.1"
+  },
+  "build": {
+    "appId": "com.stvor.app",
+    "productName": "Stvor",
+    "directories": {
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "../client/dist/**/*"
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

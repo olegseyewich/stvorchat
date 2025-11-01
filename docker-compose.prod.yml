@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stvar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-stvar}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - stvor-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-stvar}:${POSTGRES_PASSWORD:-secret}@db:5432/${POSTGRES_DB:-stvar}
+      JWT_SECRET: ${JWT_SECRET:-supersecret}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost}
+      PORT: 4000
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - stvor-network
+    command: npm run start
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:4000}
+        - VITE_SOCKET_URL=${VITE_SOCKET_URL:-http://localhost:4000}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - stvor-network
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_SOCKET_URL=${VITE_SOCKET_URL}
+
+volumes:
+  db-data:
+
+networks:
+  stvor-network:
+    driver: bridge
+
