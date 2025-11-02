@@ -18,7 +18,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-stvar}:${POSTGRES_PASSWORD:-secret}@db:5432/${POSTGRES_DB:-stvar}
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-stvar}:${POSTGRES_PASSWORD:-secret}@db:5432/${POSTGRES_DB:-stvar}}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost}
       PORT: 4000
@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
     networks:
       - stvor-network
-    command: npm run start
+    command: sh -c "npx prisma migrate deploy && npm run start"
 
   client:
     build:

@@ -77,7 +77,7 @@ sleep 15
 echo "🔍 Проверяю логи сервера на наличие ошибок миграций..."
 if docker_compose -f $COMPOSE_FILE logs server | grep -qi "migration.*error\|migration.*fail"; then
     echo "⚠️  Обнаружены ошибки в миграциях. Проверьте логи:"
-    echo "   docker_compose -f $COMPOSE_FILE logs server"
+    echo "   $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE logs server"
 else
     echo "✅ Миграции должны быть применены (проверьте логи для подтверждения)"
 fi
@@ -89,8 +89,9 @@ docker_compose -f $COMPOSE_FILE ps
 
 echo ""
 echo "🔍 Логи:"
-echo "   docker_compose -f $COMPOSE_FILE logs -f"
+echo "   $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE logs -f"
+echo "   Или последние 50 строк: $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE logs server | tail -50"
 echo ""
 echo "🛑 Остановка:"
-echo "   docker_compose -f $COMPOSE_FILE down"
+echo "   $DOCKER_COMPOSE_CMD -f $COMPOSE_FILE down"
 
