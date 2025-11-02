@@ -17,6 +17,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    ports:
+      - "${PORT:-4000}:4000"
     environment:
       DATABASE_URL: ${DATABASE_URL}
       POSTGRES_USER: ${POSTGRES_USER:-stvar}
