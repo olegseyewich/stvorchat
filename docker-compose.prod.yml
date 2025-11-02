@@ -18,7 +18,10 @@ services:
       context: ./server
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-stvar}:${POSTGRES_PASSWORD:-secret}@db:5432/${POSTGRES_DB:-stvar}}
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER:-stvar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      POSTGRES_DB: ${POSTGRES_DB:-stvar}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost}
       PORT: 4000
