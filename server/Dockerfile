@@ -7,6 +7,7 @@ RUN npm ci
 COPY prisma.config.ts ./
 COPY tsconfig.json ./
 COPY src ./src
+COPY prisma ./prisma
 
 # Используем фиктивный DATABASE_URL только для генерации клиента
 # Реальный DATABASE_URL будет передан при запуске контейнера
@@ -25,6 +26,9 @@ COPY --from=builder /app/prisma.config.ts ./
 COPY --from=builder /app/src/prisma ./src/prisma
 COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder /app/dist ./dist
+
+# Копируем миграции для применения при запуске (из исходников)
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 4000
 
