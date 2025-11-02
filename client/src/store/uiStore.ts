@@ -22,3 +22,4 @@ export const useUIStore = create<UIState>((set) => ({
   toggleFriendsPanel: () => set((state) => ({ showFriendsPanel: !state.showFriendsPanel })),
 }));
 
+

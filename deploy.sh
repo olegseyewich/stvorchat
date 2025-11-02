@@ -16,10 +16,24 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null && ! command -v docker compose &> /dev/null; then
+# Определение команды для Docker Compose
+if command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+elif docker compose version &> /dev/null; then
+    DOCKER_COMPOSE_CMD="docker compose"
+else
     echo "❌ Docker Compose не установлен. Установите Docker Compose и повторите попытку."
     exit 1
 fi
+
+# Функция для вызова docker compose с правильным синтаксисом
+docker_compose() {
+    if [ "$DOCKER_COMPOSE_CMD" = "docker-compose" ]; then
+        docker-compose "$@"
+    else
+        docker compose "$@"
+    fi
+}
 
 # Проверка .env файла
 if [ ! -f .env.production ] && [ ! -f .env ]; then
@@ -36,29 +50,52 @@ fi
 
 # Остановка старых контейнеров
 echo "🛑 Останавливаю старые контейнеры..."
-docker compose -f $COMPOSE_FILE down || true
+docker_compose -f $COMPOSE_FILE down || true
 
 # Сборка и запуск
 echo "🔨 Собираю и запускаю контейнеры..."
-docker compose -f $COMPOSE_FILE up --build -d
+docker_compose -f $COMPOSE_FILE up --build -d
 
 # Ждём запуска базы данных
 echo "⏳ Ждём запуска базы данных..."
-sleep 5
+sleep 10
 
-# Миграции базы данных (опционально, если не в Dockerfile)
-echo "📦 Применяю миграции базы данных (если необходимо)..."
-docker compose -f $COMPOSE_FILE exec -T server npx prisma migrate deploy 2>/dev/null || echo "Миграции будут применены автоматически при запуске сервера"
+# Проверка, что контейнеры запущены
+echo "🔍 Проверяю статус контейнеров..."
+if ! docker_compose -f $COMPOSE_FILE ps | grep -q "Up"; then
+    echo "⚠️  Некоторые контейнеры не запущены. Проверяю логи..."
+    docker_compose -f $COMPOSE_FILE logs --tail=50
+    exit 1
+fi
+
+# Миграции базы данных
+echo "📦 Применяю миграции базы данных..."
+MAX_RETRIES=5
+RETRY_COUNT=0
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if docker_compose -f $COMPOSE_FILE exec -T server npx prisma migrate deploy 2>/dev/null; then
+        echo "✅ Миграции применены успешно"
+        break
+    else
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⏳ Повторная попытка через 5 секунд ($RETRY_COUNT/$MAX_RETRIES)..."
+            sleep 5
+        else
+            echo "⚠️  Не удалось применить миграции. Проверьте логи сервера."
+        fi
+    fi
+done
 
 echo "✅ Деплой завершён!"
 echo ""
 echo "📊 Статус контейнеров:"
-docker compose -f $COMPOSE_FILE ps
+docker_compose -f $COMPOSE_FILE ps
 
 echo ""
 echo "🔍 Логи:"
-echo "   docker compose -f $COMPOSE_FILE logs -f"
+echo "   docker_compose -f $COMPOSE_FILE logs -f"
 echo ""
 echo "🛑 Остановка:"
-echo "   docker compose -f $COMPOSE_FILE down"
+echo "   docker_compose -f $COMPOSE_FILE down"
 

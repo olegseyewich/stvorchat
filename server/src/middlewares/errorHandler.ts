@@ -25,3 +25,4 @@ export const createHttpError = (status: number, message: string, details?: unkno
   return new HttpError(status, message, details);
 };
 
+

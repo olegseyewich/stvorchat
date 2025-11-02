@@ -33,3 +33,4 @@ export const Avatar = ({ src, alt, size = "md", fallback, isOnline }: AvatarProp
   );
 };
 
+

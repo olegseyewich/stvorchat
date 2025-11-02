@@ -22,10 +22,21 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull origin main || git pull origin master
-            chmod +x deploy.sh
+            
+            echo "🔄 Получаю последние изменения..."
+            git fetch origin
+            git reset --hard origin/main || git reset --hard origin/master
+            
+            echo "🔧 Настраиваю права на скрипт..."
+            chmod +x deploy.sh || true
+            
+            echo "🚀 Запускаю деплой..."
             ./deploy.sh production
-          EOF
+            
+            echo "✅ Деплой завершён успешно!"
+          ENDSSH
+
 

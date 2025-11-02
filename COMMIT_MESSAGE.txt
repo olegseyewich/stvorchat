@@ -1,0 +1,9 @@
+Fix deploy script for Docker Compose compatibility and improve deployment docs
+
+- Fixed deploy.sh to support both docker-compose and docker compose commands
+- Added docker_compose() function for proper command handling
+- Created START_HERE.md with step-by-step new server setup guide
+- Improved DEPLOY.md with database setup instructions and password generation
+- Updated GitHub Actions workflow for better deployment reliability
+- Added .env.example template (if needed)
+
