@@ -8,6 +8,9 @@ COPY prisma.config.ts ./
 COPY tsconfig.json ./
 COPY src ./src
 
+# Используем фиктивный DATABASE_URL только для генерации клиента
+# Реальный DATABASE_URL будет передан при запуске контейнера
+ENV DATABASE_URL="postgres://user:password@localhost:5432/dbname"
 RUN npx prisma generate
 RUN npm run build
 RUN npm prune --omit=dev
